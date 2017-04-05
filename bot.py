@@ -1,8 +1,12 @@
+import random, socket
+
 HOST = ""
 PORT = -1
 NICK = ""
 PASS = ""
 CHAN = ""
+
+BUF_SIZE = 1024
 
 botName = ""
 username = ""
@@ -23,11 +27,21 @@ def startConn(self):
 	self.s.connect((HOST, PORT))
 	
 	#login to IRC
-	#s.send("USER %s %s %s:%s\r\n" % (username, HOST, botName, botName))
 	#s.send("PASS %s\r\n" % (PASS))
 	#not needed as apparently there are no usernames/pws required
 	
-	self.s.send("NICK %s \r\n" % (botName))
+	
+	self.s.send("USER %s %s %s:%s\r\n" % (botName, botName, botName, botName))
+	while 1:
+		#generate botName
+		botNum = ''.join(random.choice('0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ') for i in range (6))
+		botName = "nicebot-" + botNum
+		self.s.send("NICK %s \r\n" % (botName))
+		
+		prefix, command, args = parsemsg(self.s.recv(1024).decode("utf-8"))
+		if command != "433":
+			break
+		
 	self.s.send("JOIN %s\r\n" % (CHAN))
 	
 def parsecmd(self, command, *args):
@@ -57,6 +71,10 @@ def parsemsg(s):
     else:
         args = s.split()
     command = args.pop(0)
+    
+    # parsemsg(":test!~test@test.com PRIVMSG #channel :Hi!")
+	# ('test!~test@test.com', 'PRIVMSG', ['#channel', 'Hi!']) 
+    
     return prefix, command, args
     
 def status(self):
