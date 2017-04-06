@@ -21,28 +21,29 @@ def startConn():
     s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     s.connect((HOST, PORT))
 
-    botNum = ''.join(random.choice('0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ') for i in range(6))
-    botName = "nicebot-" + botNum
 
-    usr = "USER %s %s %s :%s\r\n" % (botName, botName, botName, botName)
-
-    s.send(usr.encode('utf-8'))
     while 1:
+        botNum = ''.join(random.choice('0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ') for i in range(6))
+        botName = "nicebot-" + botNum
+
+        usr = "USER %s %s %s :%s\r\n" % (botName, botName, botName, botName)
+
+        s.send(usr.encode('utf-8'))
         nick = "NICK %s \r\n" % (botName)
         s.send(nick.encode('utf-8'))
         rec = s.recv(1024).decode("utf-8")
         print(rec)
         prefix, command, args = parsemsg(rec)
-        print(command)
 
         if command != "433":
             break
+
     chan = "JOIN %s\r\n" % (CHAN)
     s.send(chan.encode('utf-8'))
 
     while 1:
-        rec = s.recv(1024).decode("utf-8")
-        print(rec)
+       rec = s.recv(1024).decode("utf-8")
+       print(rec)
 
 def parsecmd(command, *args):
     if command == "status":
