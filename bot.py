@@ -1,7 +1,7 @@
 import random, socket, sys
 
-HOST = "199.116.235.44"
-PORT = 12399
+HOST = ""
+PORT = -1
 NICK = ""
 PASS = ""
 CHAN = ""
@@ -9,8 +9,8 @@ CHAN = ""
 BUF_SIZE = 1024
 
 botName = ""
-username = ""
-secret = ""
+
+
 
 s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
@@ -18,12 +18,12 @@ s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
 
 def startConn():
-    s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    s.connect((HOST, PORT))
+
 
 
     while 1:
-        botNum = ''.join(random.choice('0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ') for i in range(6))
+        botNum = ''.join(random.choice('0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz') for i in range(6))
+        global botName
         botName = "nicebot-" + botNum
 
         usr = "USER %s %s %s :%s\r\n" % (botName, botName, botName, botName)
@@ -40,20 +40,38 @@ def startConn():
 
     chan = "JOIN %s\r\n" % (CHAN)
     s.send(chan.encode('utf-8'))
+    listen(s)
+
+def listen(s):
+
 
     while 1:
        rec = s.recv(1024).decode("utf-8")
+       prefix, command, args = parsemsg(rec)
+       print("prefix: "+prefix)
+       print("command: " + command)
+       print("args: " + str(args))
+
+       if (command=="PING"):
+           s.send(("PONG :"+args[0].rstrip()).encode('utf-8'))
+
+       if (command =="PRIVMSG"):
+            msg = args[1].rstrip().split(" ")
+            print(str(msg))
+            if (msg[0]== PASS):
+                if msg[1] == "status":
+                    status()
+                elif msg[1] == "attack":
+                    attack(msg[2], msg[3])
+                elif msg[1] == "move":
+                    break
+                elif msg[1] == "shutdown":
+                    shutdown()
+
        print(rec)
 
-def parsecmd(command, *args):
-    if command == "status":
-        status()
-    elif command == "attack":
-        attack(args[0], args[1])
-    elif command == "move":
-        move(args[0], args[1], args[2])
-    elif command == "shutdown":
-        shutdown()
+    move(msg[2], msg[3], msg[4])
+
 
 #from carlos' twitch IRC bot, idk if it works with other IRCs
 def parsemsg(s):
@@ -80,6 +98,7 @@ def parsemsg(s):
 
 def status():
     msg = "HI"
+    s.send(msg.encode('utf-8'))
     #private message controller
 
 def attack(atkhost, atkport):
@@ -98,27 +117,48 @@ def attack(atkhost, atkport):
 
 def move(newhost, newport, newchan):
     success = False
+    s.send(("QUIT").encode('utf-8'))
     s.close()
+    global HOST
+    HOST=newhost
+    global PORT
+    PORT=int(newport)
+    global CHAN
+    CHAN="#"+newchan
 
+    s2 = None
     try:
-        s.connect((newhost, newport))
+        print(HOST)
+        print(PORT)
+
+        s2 = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        s2.connect((HOST, PORT))
+    except:
+        print("failed to move to new channel")  # we may want to handle a few more specific errors, this is general for now
 
         #join IRC
-        s.send("NICK %s \r\n" % (botName))
-        s.send("JOIN %s\r\n" % (newchan))
-    except:
-        print("failed to move to new channel") # we may want to handle a few more specific errors, this is general for now
+    usr = "USER %s %s %s :%s\r\n" % (botName, botName, botName, botName)
+    s2.send(usr.encode('utf-8'))
+    nic = "NICK %s \r\n" % (botName)
+    s2.send(nic.encode('utf-8'))
+    chan = "JOIN %s\r\n" % (CHAN)
+    s2.send(chan.encode('utf-8'))
+    listen(s2)
 
     #if failure, keep trying? or maybe stay on old IRC?
 
 def shutdown():
     shutdownmsg = " disconnected" #needs to be formatted properly for a private message
-    s.send(shutdownmsg)
+    s.send(("QUIT").encode('utf-8'))
     sys.exit(0)
 
+
+# python bot.py 199.116.235.44 12399 group12 pass
 if __name__ == '__main__':
     HOST = sys.argv[1]
     PORT = int(sys.argv[2])
     CHAN = "#" + sys.argv[3]
-    secret = sys.argv[4]
+    PASS = sys.argv[4]
+    s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    s.connect((HOST, PORT))
     startConn()
