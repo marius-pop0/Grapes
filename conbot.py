@@ -172,6 +172,8 @@ def move(s, hostname, newport, channel):
         counter += 1
 
     print("%d bots were moved." % (counter))
+	running = False
+	ping_thread.join()
     s.send("QUIT\r\n".encode('utf-8'))
     s.close()
     global HOST
@@ -186,12 +188,15 @@ def move(s, hostname, newport, channel):
 def quit(s):
     s.send(("QUIT\r\n").encode('utf-8'))
     s.close()
+	running = False
+	ping_thread.join()
     sys.exit(0)
 
 def shutdown(s):
     counter=0
     shutstr= "PRIVMSG " + CHAN + " :" + secret + " shutdown\r\n"
     s.send(shutstr.encode('utf-8'))
+	running = False
 
     print("waiting for bots to respond")
     time.sleep(5)
@@ -263,7 +268,7 @@ def parsecmd(c, s):
 
 def server_ping(s):
     while running:
-        time.sleep(80)
+        time.sleep(10)
         #pingmsg = "PRIVMSG %s hi\r\n" % CHAN
         #print(pingmsg)
         s.send(pingmsg.encode('utf-8'))
