@@ -1,4 +1,5 @@
 import random, socket, sys, time
+from threading import Thread
 
 HOST = ""
 PORT = -1
@@ -9,6 +10,9 @@ BUF_SIZE = 1024
 
 username = ""
 secret = ""
+pingmsg = "ping hi\r\n"
+ping_thread = None
+running = False
 
 s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
@@ -16,9 +20,20 @@ def startConn():
     try:
         s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         s.connect((HOST, PORT))
+        
     except:
         print("could not connect to IRC")
         sys.exit(1)
+        
+    #try:
+        #start thread to ping server regularly to prevent disconnect
+    global ping_thread
+    global running
+    running = True
+    ping_thread = Thread(target = server_ping, args = (s, ))
+    ping_thread.start()
+    #except:
+        #print("could not start ping thread")
 
     while 1:
         botNum = ''.join(random.choice('0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ') for i in range(6))
@@ -246,6 +261,14 @@ def parsecmd(c, s):
     else:
         print("command not found")
 
+def server_ping(s):
+    while running:
+        time.sleep(80)
+        #pingmsg = "PRIVMSG %s hi\r\n" % CHAN
+        #print(pingmsg)
+        s.send(pingmsg.encode('utf-8'))
+    
+        
 # python conbot.py 199.116.235.44 12399 group12 pass
 if __name__ == '__main__':
     HOST = sys.argv[1]
